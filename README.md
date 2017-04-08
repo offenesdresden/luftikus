@@ -26,6 +26,8 @@ export PATH=$PATH:`pwd`/xtensa-lx106-elf/bin
 ## Build + flash
 
 ```shell
+git clone --recursive https://github.com/offenesdresden/luftikus.git
+cd luftikus
 make flash ESPPORT=/dev/ttyUSB0
 ```
 
