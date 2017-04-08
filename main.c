@@ -9,6 +9,7 @@
 #include <httpd/httpd.h>
 #include "sds011.h"
 #include "backend_http_post.h"
+#include "config.h"
 
 #define LED_PIN 2
 
@@ -68,8 +69,8 @@ void user_init(void)
 
     sdk_wifi_set_opmode(STATION_MODE);
     struct sdk_station_config wifi_config = {
-        .ssid = "internet",
-        .password = "",
+        .ssid = WIFI_SSID,
+        .password = WIFI_PSK,
     };
     sdk_wifi_station_set_config(&wifi_config);
     sdk_wifi_station_connect();
