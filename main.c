@@ -6,37 +6,55 @@
 #include <stdio.h>
 #include "FreeRTOS.h"
 #include <timers.h>
-//#include <ssid_config.h>
 #include <httpd/httpd.h>
 #include "sds011.h"
+#include "backend_http_post.h"
 
 #define LED_PIN 2
-
-static bool led_state = true;
 
 void led(bool value) {
     gpio_write(LED_PIN, value);
 }
 
-static void blink_timer(TimerHandle_t t) {
-    led_state = led_state ? false : true;
-    /* printf("led_state = %i at %ul\n", led_state, xTaskGetTickCount()); */
-    led(led_state);
-
-    /* vTaskDelay(configTICK_RATE_HZ / 4); */
-}
+struct sensor_state last_state;
+static TickType_t last_update = 0;
+static TaskHandle_t http_post_task;
 
 static void sds_timer(TimerHandle_t t) {
     struct sensor_state *state = sds011_read();
     if (state) {
-        printf("SDS011\tPM2=%.1f\tPM10=%.1f\n", (float)state->pm2 / 10.0f, (float)state->pm10 / 10.0f);
+      printf("SDS011\tPM2=%.1f\tPM10=%.1f\n", (float)state->pm2 / 10.0f, (float)state->pm10 / 10.0f);
+      last_update = xTaskGetTickCountFromISR();
+      memcpy(&last_state, state, sizeof(last_state));
+      vTaskResume(http_post_task);
     }
+}
+
+static void http_post_task_loop(void *pvParameters) {
+  while(1) {
+    vTaskSuspend(http_post_task);
+
+    led(false);
+    char p1_value[16];
+    snprintf(p1_value, sizeof(p1_value), "%.1f", (float)last_state.pm10 / 10.0f);
+    char p2_value[16];
+    snprintf(p2_value, sizeof(p2_value), "%.1f", (float)last_state.pm2 / 10.0f);
+    struct sensordatavalue values[] = {
+      { .value_type = "SDS_P1", .value = p1_value },
+      { .value_type = "SDS_P2", .value = p2_value },
+      { .value_type = NULL, .value = NULL }
+    };
+    http_post("www1.hq.c3d2.de", 3000, "/sensors/Astro", values);
+    led(true);
+  }
 }
 
 void user_init(void)
 {
     uart_set_baud(0, 115200);
-    printf("SDK version:%s\n", sdk_system_get_sdk_version());
+    printf("SDK version: %s\n", sdk_system_get_sdk_version());
+    printf("Chip ID: %u\n", sdk_system_get_chip_id());
+    printf("Timer/task stack depth: %u\n", configTIMER_TASK_STACK_DEPTH);
 
     /* turn off LED */
     gpio_enable(LED_PIN, GPIO_OUTPUT);
@@ -44,11 +62,18 @@ void user_init(void)
 
     sds011_setup();
 
+    sdk_wifi_set_opmode(STATION_MODE);
+    struct sdk_station_config wifi_config = {
+        .ssid = "internet",
+        .password = "",
+    };
+    sdk_wifi_station_set_config(&wifi_config);
+    sdk_wifi_station_connect();
+
     TimerHandle_t t2 = xTimerCreate("sds011", configTICK_RATE_HZ / 8, pdTRUE, NULL, &sds_timer);
     xTimerStart(t2, 0);
 
-    TimerHandle_t t1 = xTimerCreate("blinker", configTICK_RATE_HZ / 2, pdTRUE, NULL, &blink_timer);
-    xTimerStart(t1, 0);
+    xTaskCreate(&http_post_task_loop, "http_post", 256, NULL, 2, &http_post_task);
 
     printf("user_init done!\n");
 }
