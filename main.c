@@ -31,8 +31,10 @@ static void sds_timer(TimerHandle_t t) {
 }
 
 static void http_post_task_loop(void *pvParameters) {
+  TickType_t last_resume;
   while(1) {
     vTaskSuspend(http_post_task);
+    last_resume = xTaskGetTickCount();
 
     led(false);
     char p1_value[16];
@@ -44,8 +46,10 @@ static void http_post_task_loop(void *pvParameters) {
       { .value_type = "SDS_P2", .value = p2_value },
       { .value_type = NULL, .value = NULL }
     };
-    http_post("www1.hq.c3d2.de", 3000, "/sensors/Astro", values);
+    http_post("api-rrd.madavi.de", 80, "/data.php", values);
     led(true);
+
+    vTaskDelayUntil(&last_resume, 30 * configTICK_RATE_HZ);
   }
 }
 

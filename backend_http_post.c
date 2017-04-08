@@ -78,7 +78,7 @@ void http_post(const char *host, const uint16_t port, const char *path, const st
   }
   bodylen = strlen(body);
   snprintf(body + bodylen, sizeof(body) - bodylen, "]}");
-  
+
   static char buf[128];
   snprintf(buf, sizeof(buf),
            "POST %s HTTP/1.1\r\n", path);
@@ -95,7 +95,7 @@ void http_post(const char *host, const uint16_t port, const char *path, const st
            "X-Sensor: esp8266-%u\r\n", sdk_system_get_chip_id());
   if (!send_str(s, buf)) return;
   snprintf(buf, sizeof(buf),
-           "X-PIN: esp8266-%u\r\n", SDS_API_PIN);
+           "X-PIN: %u\r\n", SDS_API_PIN);
   if (!send_str(s, buf)) return;
   if (!send_str(s, "\r\n")) return;
   if (!send_str(s, body)) return;
