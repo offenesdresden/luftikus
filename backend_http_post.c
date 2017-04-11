@@ -61,7 +61,7 @@ void http_post(const char *host, const uint16_t port, const char *path, const st
   printf("... connected\r\n");
   freeaddrinfo(res);
 
-  char body[128];
+  char body[196];
   snprintf(body, sizeof(body), "{"
            "\"sensordatavalues\":[");
   int bodylen;
