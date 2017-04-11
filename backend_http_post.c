@@ -80,7 +80,7 @@ void http_post(const char *host, const uint16_t port, const char *path, const st
   bodylen = strlen(body);
   snprintf(body + bodylen, sizeof(body) - bodylen, "]}");
 
-  static char buf[128];
+  char buf[128];
   snprintf(buf, sizeof(buf),
            "POST %s HTTP/1.1\r\n", path);
   if (!send_str(s, buf)) return;
