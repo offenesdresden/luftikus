@@ -39,7 +39,6 @@ cu -s 115200 -l /dev/ttyUSB0
 
 # TODO
 
-* ipaddr_ntoa_r
 * calculate mean
 * more sensors
 * https

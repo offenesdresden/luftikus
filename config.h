@@ -15,7 +15,7 @@ static struct output_task outputs[] = { {
       { .key = "host", .value = "www.hq.c3d2.de" },
       { .key = "port", .value = "3000" },
       { .key = "path", .value = "/sensors/Innen" },
-      { .key = NULL, .value = NULL },
+      { .key = NULL, .value = NULL }
     }
 }, {
     .name = "InfluxDB",

@@ -32,7 +32,6 @@ void influx_post(const struct output_config *config, const struct sensordata *va
   };
   struct addrinfo *res;
 
-  printf("Running DNS lookup for %s:%s...\r\n", host, port_str);
   int err = getaddrinfo(host, port_str, &hints, &res);
 
   if(err != 0 || res == NULL) {
@@ -42,9 +41,6 @@ void influx_post(const struct output_config *config, const struct sensordata *va
     }
     return;
   }
-  /* Note: inet_ntoa is non-reentrant, look at ipaddr_ntoa_r for "real" code */
-  struct in_addr *addr = &((struct sockaddr_in *)res->ai_addr)->sin_addr;
-  printf("DNS lookup succeeded. IP=%s\r\n", inet_ntoa(*addr));
 
   int s = socket(res->ai_family, res->ai_socktype, 0);
   if(s < 0) {
@@ -59,8 +55,6 @@ void influx_post(const struct output_config *config, const struct sensordata *va
     printf("... socket connect failed.\r\n");
     return;
   }
-
-  printf("... connected\r\n");
   freeaddrinfo(res);
 
   char body[196];
@@ -90,7 +84,8 @@ void influx_post(const struct output_config *config, const struct sensordata *va
   if (!send_str(s, buf)) return;
   if (!send_str(s, "\r\n")) return;
   if (!send_str(s, body)) return;
-  printf("... socket send success\r\n");
+
+  printf("POST influx://%s:%s%s\n", host, port_str, path);
 
   int r;
   do {
@@ -98,6 +93,5 @@ void influx_post(const struct output_config *config, const struct sensordata *va
     r = read(s, buf, sizeof(buf) - 1);
   } while(r > 0);
 
-  printf("... done reading from socket. Last read return=%d errno=%d\r\n", r, errno);
   close(s);
 }
