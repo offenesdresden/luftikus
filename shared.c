@@ -13,3 +13,7 @@ char *get_config(const struct output_config *config, const char *key) {
   printf("Expected configuration key not found: %s\n", key);
   return "";
 }
+
+int now() {
+  return xTaskGetTickCountFromISR() / configTICK_RATE_HZ;
+}

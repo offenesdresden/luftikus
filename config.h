@@ -9,6 +9,7 @@
  **/
 static struct output_task outputs[] = { {
     .name = "SpaceAPI",
+    .interval = 3,
     .post_func = &http_post,
     .config = (struct output_config []){
       { .key = "host", .value = "www.hq.c3d2.de" },
@@ -18,6 +19,7 @@ static struct output_task outputs[] = { {
     }
 }, {
     .name = "InfluxDB",
+    .interval = 10,
     .post_func = &influx_post,
     .config = (struct output_config []){
       { .key = "host", .value = "flatbert.hq.c3d2.de" },

@@ -23,11 +23,15 @@ void led(bool value) {
 
 struct sensor_state dust_state;
 struct dht22_state dht_state;
-static TickType_t last_update = 0;
+static int last_update = 0;
 
 void resume_output_tasks() {
+  int time = now();
   for(struct output_task *o = outputs; o->post_func; o++) {
-    vTaskResume(o->task);
+    if (time >= o->last_run + o->interval) {
+      o->last_run = time;
+      vTaskResume(o->task);
+    }
   }
 }
 
@@ -35,7 +39,7 @@ static void sds_timer(TimerHandle_t t) {
     struct sensor_state *state = sds011_read();
     if (state) {
       printf("SDS011\tPM2=%.1f\tPM10=%.1f\n", (float)state->pm2 / 10.0f, (float)state->pm10 / 10.0f);
-      last_update = xTaskGetTickCountFromISR();
+      last_update = now();
       memcpy(&dust_state, state, sizeof(dust_state));
 
       resume_output_tasks();
@@ -48,7 +52,7 @@ static void dht_timer(TimerHandle_t t) {
       printf("DHT22\tHumidity=%.1f%%\tTemperature=%.1f°C\n",
              (float)state->humidity / 10.0f,
              (float)state->temperature / 10.0f);
-      last_update = xTaskGetTickCountFromISR();
+      last_update = now();
       memcpy(&dht_state, state, sizeof(dht_state));
 
       resume_output_tasks();
@@ -60,7 +64,6 @@ static void output_task(void *pvParameters) {
 
   for(;;) {
     vTaskSuspend(output->task);
-    output->last_resume = last_update;
     printf("Resumed task \"%s\"\n", output->name);
 
     led(false);
@@ -114,6 +117,7 @@ void user_init(void)
     xTimerStart(dht_timer_handle, 0);
 
     for(struct output_task *o = outputs; o->post_func; o++) {
+      o->last_run = 0;
       xTaskCreate(&output_task, o->name, 1024, o, 2, &o->task);
     }
 
