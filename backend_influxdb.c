@@ -7,6 +7,8 @@
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
+
+#include "shared.h"
 #include "backend_influxdb.h"
 
 
@@ -19,15 +21,17 @@ static bool send_str(int sock, const char *str) {
   return true;
 }
 
-void influx_post(const char *host, const uint16_t port, const char *path, const char *auth, const struct influx_sensordatavalue *values) {
+void influx_post(const struct output_config *config, const struct sensordata *values) {
+  char *host = get_config(config, "host");
+  char *port_str = get_config(config, "port");
+  char *path = get_config(config, "path");
+
   const struct addrinfo hints = {
     .ai_family = AF_INET,
     .ai_socktype = SOCK_STREAM,
   };
   struct addrinfo *res;
 
-  char port_str[6];
-  snprintf(port_str, sizeof(port_str), "%u", port);
   printf("Running DNS lookup for %s:%s...\r\n", host, port_str);
   int err = getaddrinfo(host, port_str, &hints, &res);
 
@@ -62,12 +66,12 @@ void influx_post(const char *host, const uint16_t port, const char *path, const 
   char body[196];
   snprintf(body, sizeof(body), "feinstaub,node=esp8266-%u ", sdk_system_get_chip_id());
   int bodylen;
-  for(const struct influx_sensordatavalue *v = values; v->value_type; v++) {
+  for(const struct sensordata *v = values; v->name; v++) {
     bodylen = strlen(body);
     snprintf(body + bodylen, sizeof(body) - bodylen,
              "%s%s=%s",
              (v == values ? "" : ","),
-             v->value_type,
+             v->name,
              v->value
       );
   }

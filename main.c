@@ -7,6 +7,8 @@
 #include "FreeRTOS.h"
 #include <timers.h>
 #include <httpd/httpd.h>
+
+#include "shared.h"
 #include "sds011.h"
 #include "dht22.h"
 #include "backend_http_post.h"
@@ -22,8 +24,12 @@ void led(bool value) {
 struct sensor_state dust_state;
 struct dht22_state dht_state;
 static TickType_t last_update = 0;
-static TaskHandle_t http_post_task;
-static TaskHandle_t influxdb_task;
+
+void resume_output_tasks() {
+  for(struct output_task *o = outputs; o->post_func; o++) {
+    vTaskResume(o->task);
+  }
+}
 
 static void sds_timer(TimerHandle_t t) {
     struct sensor_state *state = sds011_read();
@@ -31,8 +37,8 @@ static void sds_timer(TimerHandle_t t) {
       printf("SDS011\tPM2=%.1f\tPM10=%.1f\n", (float)state->pm2 / 10.0f, (float)state->pm10 / 10.0f);
       last_update = xTaskGetTickCountFromISR();
       memcpy(&dust_state, state, sizeof(dust_state));
-      vTaskResume(http_post_task);
-      vTaskResume(influxdb_task);
+
+      resume_output_tasks();
     }
 }
 
@@ -44,18 +50,21 @@ static void dht_timer(TimerHandle_t t) {
              (float)state->temperature / 10.0f);
       last_update = xTaskGetTickCountFromISR();
       memcpy(&dht_state, state, sizeof(dht_state));
-      vTaskResume(http_post_task);
-      vTaskResume(influxdb_task);
+
+      resume_output_tasks();
     }
 }
 
-static void http_post_task_loop(void *pvParameters) {
-  TickType_t last_resume;
-  while(1) {
-    vTaskSuspend(http_post_task);
-    last_resume = xTaskGetTickCount();
+static void output_task(void *pvParameters) {
+  struct output_task *output = pvParameters;
+
+  for(;;) {
+    vTaskSuspend(output->task);
+    output->last_resume = last_update;
+    printf("Resumed task \"%s\"\n", output->name);
 
     led(false);
+
     char p1_value[16];
     snprintf(p1_value, sizeof(p1_value), "%.1f", (float)dust_state.pm10 / 10.0f);
     char p2_value[16];
@@ -64,46 +73,16 @@ static void http_post_task_loop(void *pvParameters) {
     snprintf(temp_value, sizeof(temp_value), "%.1f", (float)dht_state.temperature / 10.0f);
     char humid_value[16];
     snprintf(humid_value, sizeof(humid_value), "%.1f", (float)dht_state.humidity / 10.0f);
-    struct sensordatavalue values[] = {
-      { .value_type = "SDS_P1", .value = p1_value },
-      { .value_type = "SDS_P2", .value = p2_value },
-      { .value_type = "temperature", .value = temp_value },
-      { .value_type = "humidity", .value = humid_value },
-      { .value_type = NULL, .value = NULL }
+    struct sensordata values[] = {
+      { .name = "SDS_P1", .value = p1_value },
+      { .name = "SDS_P2", .value = p2_value },
+      { .name = "temperature", .value = temp_value },
+      { .name = "humidity", .value = humid_value },
+      { .name = NULL, .value = NULL }
     };
-    http_post("api-rrd.madavi.de", 80, "/data.php", values);
+
+    output->post_func(output->config, values);
     led(true);
-
-    vTaskDelayUntil(&last_resume, 30 * configTICK_RATE_HZ);
-  }
-}
-
-static void influxdb_task_loop(void *pvParameters) {
-  TickType_t last_resume;
-  while(1) {
-    vTaskSuspend(influxdb_task);
-    last_resume = xTaskGetTickCount();
-
-    led(false);
-    char p1_value[16];
-    snprintf(p1_value, sizeof(p1_value), "%.1f", (float)dust_state.pm10 / 10.0f);
-    char p2_value[16];
-    snprintf(p2_value, sizeof(p2_value), "%.1f", (float)dust_state.pm2 / 10.0f);
-    char temp_value[16];
-    snprintf(temp_value, sizeof(temp_value), "%.1f", (float)dht_state.temperature / 10.0f);
-    char humid_value[16];
-    snprintf(humid_value, sizeof(humid_value), "%.1f", (float)dht_state.humidity / 10.0f);
-    struct influx_sensordatavalue values[] = {
-      { .value_type = "SDS_P1", .value = p1_value },
-      { .value_type = "SDS_P2", .value = p2_value },
-      { .value_type = "temperature", .value = temp_value },
-      { .value_type = "humidity", .value = humid_value },
-      { .value_type = NULL, .value = NULL }
-    };
-    influx_post("flatbert.hq.c3d2.de", 8086, "/write?db=luftdaten-innen", NULL, values);
-    led(true);
-
-    /* vTaskDelayUntil(&last_resume, 30 * configTICK_RATE_HZ); */
   }
 }
 
@@ -128,14 +107,15 @@ void user_init(void)
     sdk_wifi_station_set_config(&wifi_config);
     sdk_wifi_station_connect();
 
-    TimerHandle_t sds_timer_handle = xTimerCreate("sds011", configTICK_RATE_HZ / 8, pdTRUE, NULL, &sds_timer);
+    TimerHandle_t sds_timer_handle = xTimerCreate("sds011", configTICK_RATE_HZ / 2, pdTRUE, NULL, &sds_timer);
     xTimerStart(sds_timer_handle, 0);
 
-    TimerHandle_t dht_timer_handle = xTimerCreate("dht22", configTICK_RATE_HZ / 8, pdTRUE, NULL, &dht_timer);
+    TimerHandle_t dht_timer_handle = xTimerCreate("dht22", configTICK_RATE_HZ / 2, pdTRUE, NULL, &dht_timer);
     xTimerStart(dht_timer_handle, 0);
 
-    xTaskCreate(&http_post_task_loop, "http_post", 1024, NULL, 2, &http_post_task);
-    xTaskCreate(&influxdb_task_loop, "influxdb", 1024, NULL, 2, &influxdb_task);
+    for(struct output_task *o = outputs; o->post_func; o++) {
+      xTaskCreate(&output_task, o->name, 1024, o, 2, &o->task);
+    }
 
     printf("user_init done!\n");
 }

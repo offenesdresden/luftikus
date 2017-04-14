@@ -7,6 +7,8 @@
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
+
+#include "shared.h"
 #include "backend_http_post.h"
 
 #define SDS_API_PIN 1
@@ -21,15 +23,17 @@ static bool send_str(int sock, const char *str) {
   return true;
 }
 
-void http_post(const char *host, const uint16_t port, const char *path, const struct sensordatavalue *values) {
+void http_post(const struct output_config *config, const struct sensordata *values) {
+  char *host = get_config(config, "host");
+  char *port_str = get_config(config, "port");
+  char *path = get_config(config, "path");
+
   const struct addrinfo hints = {
     .ai_family = AF_INET,
     .ai_socktype = SOCK_STREAM,
   };
   struct addrinfo *res;
 
-  char port_str[6];
-  snprintf(port_str, sizeof(port_str), "%u", port);
   printf("Running DNS lookup for %s:%s...\r\n", host, port_str);
   int err = getaddrinfo(host, port_str, &hints, &res);
 
@@ -65,7 +69,7 @@ void http_post(const char *host, const uint16_t port, const char *path, const st
   snprintf(body, sizeof(body), "{"
            "\"sensordatavalues\":[");
   int bodylen;
-  for(const struct sensordatavalue *v = values; v->value_type; v++) {
+  for(const struct sensordata *v = values; v->name; v++) {
     bodylen = strlen(body);
     snprintf(body + bodylen, sizeof(body) - bodylen,
              "%s{"
@@ -73,7 +77,7 @@ void http_post(const char *host, const uint16_t port, const char *path, const st
              "\"value\":\"%s\""
              "}",
              (v == values ? "" : ","),
-             v->value_type,
+             v->name,
              v->value
       );
   }
