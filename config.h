@@ -18,6 +18,26 @@ static struct output_task outputs[] = { {
       { .key = NULL, .value = NULL }
     }
 }, {
+    .name = "madavi.de",
+    .interval = 30,
+    .post_func = &http_post,
+    .config = (struct output_config []){
+      { .key = "host", .value = "api-rrd.madavi.de" },
+      { .key = "port", .value = "80" },
+      { .key = "path", .value = "/data.php" },
+      { .key = NULL, .value = NULL }
+    }
+}, {
+    .name = "luftdaten.info",
+    .interval = 30,
+    .post_func = &http_post,
+    .config = (struct output_config []){
+      { .key = "host", .value = "api.luftdaten.info" },
+      { .key = "port", .value = "80" },
+      { .key = "path", .value = "/v1/push-sensor-data/" },
+      { .key = NULL, .value = NULL }
+    }
+}, {
     .name = "InfluxDB",
     .interval = 10,
     .post_func = &influx_post,
