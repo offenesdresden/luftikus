@@ -25,6 +25,8 @@ export PATH=$PATH:`pwd`/xtensa-lx106-elf/bin
 
 ## Build + flash
 
+First, edit `config.h` for configuration.
+
 ```shell
 git clone --recursive https://github.com/offenesdresden/luftikus.git
 cd luftikus
