@@ -59,9 +59,11 @@ void http_post(const struct output_config *config, const struct sensordata *valu
   }
   freeaddrinfo(res);
 
-  char body[196];
+  char body[256];
   snprintf(body, sizeof(body), "{"
-           "\"sensordatavalues\":[");
+           "\"softwareversion\":\"Luftikus/%s\","
+           "\"sensordatavalues\":[",
+           VERSION);
   int bodylen;
   for(const struct sensordata *v = values; v->name; v++) {
     bodylen = strlen(body);

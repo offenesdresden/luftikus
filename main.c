@@ -93,6 +93,7 @@ void user_init(void)
 {
     uart_set_baud(0, 115200);
     printf("SDK version: %s\n", sdk_system_get_sdk_version());
+    printf("Luftikus version: %s\n", VERSION);
     printf("Chip ID: %u\n", sdk_system_get_chip_id());
     printf("Timer/task stack depth: %u\n", configTIMER_TASK_STACK_DEPTH);
 
