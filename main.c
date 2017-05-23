@@ -62,6 +62,7 @@ static void output_loop(void *pvParameters) {
     vTaskSuspend(output_task);
     led(false);
 
+    int outputs_done = 0;
     for(struct output_task *output = outputs; output->post_func; output++) {
       int time = now();
       if (time < output->last_run + output->interval) {
@@ -74,10 +75,10 @@ static void output_loop(void *pvParameters) {
 
       struct sensordata values[5];
       int values_i = 0;
+      char p1_value[16];
+      char p2_value[16];
       if (output->flags & OUTPUT_SDS011) {
-        char p1_value[16];
         snprintf(p1_value, sizeof(p1_value), "%.1f", timeseries_median_since(&sds011_p1, previous_run));
-        char p2_value[16];
         snprintf(p2_value, sizeof(p2_value), "%.1f", timeseries_median_since(&sds011_p2, previous_run));
 
         int only_sds = output->flags == OUTPUT_SDS011;
@@ -88,10 +89,10 @@ static void output_loop(void *pvParameters) {
         values[values_i].value = p2_value;
         values_i++;
       }
+      char temp_value[16];
+      char humid_value[16];
       if (output->flags & OUTPUT_DHT22) {
-        char temp_value[16];
         snprintf(temp_value, sizeof(temp_value), "%.1f", timeseries_median_since(&dht22_temp, previous_run));
-        char humid_value[16];
         snprintf(humid_value, sizeof(humid_value), "%.1f", timeseries_median_since(&dht22_humid, previous_run));
 
         values[values_i].name = "temperature";
@@ -105,8 +106,10 @@ static void output_loop(void *pvParameters) {
       values[values_i].value = NULL;
 
       output->post_func(output->config, values);
+      outputs_done++;
     }
-    printf("All outputs done\n");
+    if (outputs_done > 0)
+      printf("%i outputs done\n", outputs_done);
 
     led(true);
   }
