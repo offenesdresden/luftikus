@@ -16,7 +16,8 @@ static struct output_task outputs[] = { {
       { .key = "port", .value = "3000" },
       { .key = "path", .value = "/sensors/Aussen" },
       { .key = NULL, .value = NULL }
-    }
+    },
+    .flags = OUTPUT_ALL
 }, {
     .name = "madavi.de",
     .interval = 30,
@@ -25,7 +26,8 @@ static struct output_task outputs[] = { {
       { .key = "host", .value = "api-rrd.madavi.de" },
       { .key = "path", .value = "/data.php" },
       { .key = NULL, .value = NULL }
-    }
+    },
+    .flags = OUTPUT_ALL
 }, {
     .name = "luftdaten.info Feinstaub",
     .interval = 30,
@@ -35,7 +37,8 @@ static struct output_task outputs[] = { {
       { .key = "path", .value = "/v1/push-sensor-data/" },
       { .key = "x-pin", .value = "1" },
       { .key = NULL, .value = NULL }
-    }
+    },
+    .flags = OUTPUT_SDS011
 }, {
     .name = "luftdaten.info Temp+Hum",
     .interval = 30,
@@ -45,7 +48,8 @@ static struct output_task outputs[] = { {
       { .key = "path", .value = "/v1/push-sensor-data/" },
       { .key = "x-pin", .value = "7" },
       { .key = NULL, .value = NULL }
-    }
+    },
+    .flags = OUTPUT_DHT22
 }, {
     .name = "InfluxDB",
     .interval = 10,
@@ -55,7 +59,8 @@ static struct output_task outputs[] = { {
       { .key = "port", .value = "8086" },
       { .key = "path", .value = "/write?db=luftdaten" },
       { .key = NULL, .value = NULL }
-    }
+    },
+    .flags = OUTPUT_ALL
 }, {
     .post_func = NULL
 } };

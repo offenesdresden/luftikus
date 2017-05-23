@@ -69,20 +69,34 @@ static void output_task(void *pvParameters) {
     led(false);
 
     char p1_value[16];
-    snprintf(p1_value, sizeof(p1_value), "%.1f", dust_state.pm10);
     char p2_value[16];
-    snprintf(p2_value, sizeof(p2_value), "%.1f", dust_state.pm2);
     char temp_value[16];
-    snprintf(temp_value, sizeof(temp_value), "%.1f", dht_state.temperature);
     char humid_value[16];
-    snprintf(humid_value, sizeof(humid_value), "%.1f", dht_state.humidity);
-    struct sensordata values[] = {
-      { .name = "SDS_P1", .value = p1_value },
-      { .name = "SDS_P2", .value = p2_value },
-      { .name = "temperature", .value = temp_value },
-      { .name = "humidity", .value = humid_value },
-      { .name = NULL, .value = NULL }
-    };
+    struct sensordata values[5];
+    int values_i = 0;
+    if (output->flags & OUTPUT_SDS011) {
+      snprintf(p1_value, sizeof(p1_value), "%.1f", dust_state.pm10);
+      snprintf(p2_value, sizeof(p2_value), "%.1f", dust_state.pm2);
+      int only_sds = output->flags & OUTPUT_SDS011;
+      values[values_i].name = only_sds ? "P1" : "SDS_P1";
+      values[values_i].value = p1_value;
+      values_i++;
+      values[values_i].name = only_sds ? "P2" : "SDS_P2";
+      values[values_i].value = p2_value;
+      values_i++;
+    }
+    if (output->flags & OUTPUT_DHT22) {
+      snprintf(temp_value, sizeof(temp_value), "%.1f", dht_state.temperature);
+      snprintf(humid_value, sizeof(humid_value), "%.1f", dht_state.humidity);
+      values[values_i].name = "temperature";
+      values[values_i].value = temp_value;
+      values_i++;
+      values[values_i].name = "humidity";
+      values[values_i].value = humid_value;
+      values_i++;
+    }
+    values[values_i].name = NULL;
+    values[values_i].value = NULL;
 
     output->post_func(output->config, values);
     led(true);
