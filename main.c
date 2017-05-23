@@ -38,7 +38,7 @@ void resume_output_tasks() {
 static void sds_timer(TimerHandle_t t) {
     struct sensor_state *state = sds011_read();
     if (state) {
-      printf("SDS011\tPM2=%.1f\tPM10=%.1f\n", (float)state->pm2 / 10.0f, (float)state->pm10 / 10.0f);
+      printf("SDS011\tPM2=%.1f\tPM10=%.1f\n", state->pm2, state->pm10);
       last_update = now();
       memcpy(&dust_state, state, sizeof(dust_state));
 
@@ -50,8 +50,8 @@ static void dht_timer(TimerHandle_t t) {
     struct dht22_state *state = dht22_read();
     if (state) {
       printf("DHT22\tHumidity=%.1f%%\tTemperature=%.1f°C\n",
-             (float)state->humidity / 10.0f,
-             (float)state->temperature / 10.0f);
+             state->humidity,
+             state->temperature);
       last_update = now();
       memcpy(&dht_state, state, sizeof(dht_state));
 
@@ -69,13 +69,13 @@ static void output_task(void *pvParameters) {
     led(false);
 
     char p1_value[16];
-    snprintf(p1_value, sizeof(p1_value), "%.1f", (float)dust_state.pm10 / 10.0f);
+    snprintf(p1_value, sizeof(p1_value), "%.1f", dust_state.pm10);
     char p2_value[16];
-    snprintf(p2_value, sizeof(p2_value), "%.1f", (float)dust_state.pm2 / 10.0f);
+    snprintf(p2_value, sizeof(p2_value), "%.1f", dust_state.pm2);
     char temp_value[16];
-    snprintf(temp_value, sizeof(temp_value), "%.1f", (float)dht_state.temperature / 10.0f);
+    snprintf(temp_value, sizeof(temp_value), "%.1f", dht_state.temperature);
     char humid_value[16];
-    snprintf(humid_value, sizeof(humid_value), "%.1f", (float)dht_state.humidity / 10.0f);
+    snprintf(humid_value, sizeof(humid_value), "%.1f", dht_state.humidity);
     struct sensordata values[] = {
       { .name = "SDS_P1", .value = p1_value },
       { .name = "SDS_P2", .value = p2_value },

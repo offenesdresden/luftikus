@@ -41,12 +41,12 @@ struct sensor_state *sds011_read() {
 
         uint8_t pm2a = get_input_buf(-7);
         uint8_t pm2b = get_input_buf(-6);
-        state.pm2 = ((uint16_t)pm2b << 8) | ((uint16_t)pm2a);
+        state.pm2 = (float)(((uint16_t)pm2b << 8) | ((uint16_t)pm2a)) / 10.0f;
         expected_checksum += pm2a + pm2b;
 
         uint8_t pm10a = get_input_buf(-5);
         uint8_t pm10b = get_input_buf(-4);
-        state.pm10 = ((uint16_t)pm10b << 8) | ((uint16_t)pm10a);
+        state.pm10 = (float)(((uint16_t)pm10b << 8) | ((uint16_t)pm10a)) / 10.0f;
         expected_checksum += pm10a + pm10b;
 
         expected_checksum += get_input_buf(-3);
