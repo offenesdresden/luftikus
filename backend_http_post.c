@@ -11,8 +11,6 @@
 #include "shared.h"
 #include "backend_http_post.h"
 
-#define SDS_API_PIN 1
-
 
 static bool send_str(int sock, const char *str) {
   if (write(sock, str, strlen(str)) < 0) {
@@ -95,9 +93,12 @@ void http_post(const struct output_config *config, const struct sensordata *valu
   snprintf(buf, sizeof(buf),
            "X-Sensor: esp8266-%u\r\n", sdk_system_get_chip_id());
   if (!send_str(s, buf)) return;
-  snprintf(buf, sizeof(buf),
-           "X-PIN: %u\r\n", SDS_API_PIN);
-  if (!send_str(s, buf)) return;
+  char *x_pin = get_config(config, "x-pin");
+  if (x_pin) {
+    snprintf(buf, sizeof(buf),
+             "X-PIN: %s\r\n", x_pin);
+    if (!send_str(s, buf)) return;
+  }
   if (!send_str(s, "\r\n")) return;
   if (!send_str(s, body)) return;
 

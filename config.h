@@ -28,13 +28,25 @@ static struct output_task outputs[] = { {
       { .key = NULL, .value = NULL }
     }
 }, {
-    .name = "luftdaten.info",
+    .name = "luftdaten.info Feinstaub",
     .interval = 30,
     .post_func = &http_post,
     .config = (struct output_config []){
       { .key = "host", .value = "api.luftdaten.info" },
       { .key = "port", .value = "80" },
       { .key = "path", .value = "/v1/push-sensor-data/" },
+      { .key = "x-pin", .value = "1" },
+      { .key = NULL, .value = NULL }
+    }
+}, {
+    .name = "luftdaten.info Temp+Hum",
+    .interval = 30,
+    .post_func = &http_post,
+    .config = (struct output_config []){
+      { .key = "host", .value = "api.luftdaten.info" },
+      { .key = "port", .value = "80" },
+      { .key = "path", .value = "/v1/push-sensor-data/" },
+      { .key = "x-pin", .value = "7" },
       { .key = NULL, .value = NULL }
     }
 }, {
