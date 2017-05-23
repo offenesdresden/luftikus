@@ -2,9 +2,9 @@ static const uint8_t UART_NO_SDS011 = 1;
 
 void sds011_setup();
 
-struct sensor_state {
+struct sds011_state {
     // unit: 1 µg/m³
-    float pm2;
-    float pm10;
+    float p1;
+    float p2;
 };
-struct sensor_state *sds011_read();
+struct sds011_state *sds011_read();

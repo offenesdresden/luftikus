@@ -21,7 +21,7 @@ void led(bool value) {
     gpio_write(LED_PIN, value);
 }
 
-struct sensor_state dust_state;
+struct sds011_state dust_state;
 struct dht22_state dht_state;
 static int last_update = 0;
 
@@ -32,9 +32,9 @@ void resume_output_task() {
 }
 
 static void sds_timer(TimerHandle_t t) {
-    struct sensor_state *state = sds011_read();
+    struct sds011_state *state = sds011_read();
     if (state) {
-      printf("SDS011\tPM2=%.1f\tPM10=%.1f\n", state->pm2, state->pm10);
+      printf("SDS011\tPM2=%.1f\tPM10=%.1f\n", state->p1, state->p2);
       last_update = now();
       memcpy(&dust_state, state, sizeof(dust_state));
 

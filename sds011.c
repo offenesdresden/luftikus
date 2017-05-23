@@ -11,7 +11,7 @@ void sds011_setup() {
     softuart_open(UART_NO_SDS011, 9600, RX_PIN, TX_PIN);
 }
 
-static struct sensor_state state;
+static struct sds011_state state;
 
 /* Circular buffer to match start/end in data */
 static uint8_t input_buf[10];
@@ -25,7 +25,7 @@ static uint8_t get_input_buf(int8_t offset) {
     return *i;
 }
 
-struct sensor_state *sds011_read() {
+struct sds011_state *sds011_read() {
     while (softuart_available(UART_NO_SDS011)) {
         *input = softuart_read(UART_NO_SDS011);
         input++;
@@ -39,15 +39,15 @@ struct sensor_state *sds011_read() {
 
         uint8_t expected_checksum = 0;
 
-        uint8_t pm2a = get_input_buf(-7);
-        uint8_t pm2b = get_input_buf(-6);
-        state.pm2 = (float)(((uint16_t)pm2b << 8) | ((uint16_t)pm2a)) / 10.0f;
-        expected_checksum += pm2a + pm2b;
+        uint8_t p1a = get_input_buf(-7);
+        uint8_t p1b = get_input_buf(-6);
+        state.p1 = (float)(((uint16_t)p1b << 8) | ((uint16_t)p1a)) / 10.0f;
+        expected_checksum += p1a + p1b;
 
-        uint8_t pm10a = get_input_buf(-5);
-        uint8_t pm10b = get_input_buf(-4);
-        state.pm10 = (float)(((uint16_t)pm10b << 8) | ((uint16_t)pm10a)) / 10.0f;
-        expected_checksum += pm10a + pm10b;
+        uint8_t p2a = get_input_buf(-5);
+        uint8_t p2b = get_input_buf(-4);
+        state.p2 = (float)(((uint16_t)p2b << 8) | ((uint16_t)p2a)) / 10.0f;
+        expected_checksum += p2a + p2b;
 
         expected_checksum += get_input_buf(-3);
         expected_checksum += get_input_buf(-2);
