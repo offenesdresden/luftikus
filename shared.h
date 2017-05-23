@@ -20,7 +20,6 @@ enum output_flags {
 
 struct output_task {
   // State
-  TaskHandle_t task;
   int last_run;
 
   // Configuration in config.h
