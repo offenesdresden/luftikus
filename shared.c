@@ -10,8 +10,7 @@ char *get_config(const struct output_config *config, const char *key) {
     }
   }
 
-  printf("Expected configuration key not found: %s\n", key);
-  return "";
+  return NULL;
 }
 
 int now() {

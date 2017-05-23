@@ -14,7 +14,7 @@ static struct output_task outputs[] = { {
     .config = (struct output_config []){
       { .key = "host", .value = "www.hq.c3d2.de" },
       { .key = "port", .value = "3000" },
-      { .key = "path", .value = "/sensors/Innen" },
+      { .key = "path", .value = "/sensors/Aussen" },
       { .key = NULL, .value = NULL }
     }
 }, {
@@ -23,7 +23,6 @@ static struct output_task outputs[] = { {
     .post_func = &http_post,
     .config = (struct output_config []){
       { .key = "host", .value = "api-rrd.madavi.de" },
-      { .key = "port", .value = "80" },
       { .key = "path", .value = "/data.php" },
       { .key = NULL, .value = NULL }
     }
@@ -33,7 +32,6 @@ static struct output_task outputs[] = { {
     .post_func = &http_post,
     .config = (struct output_config []){
       { .key = "host", .value = "api.luftdaten.info" },
-      { .key = "port", .value = "80" },
       { .key = "path", .value = "/v1/push-sensor-data/" },
       { .key = "x-pin", .value = "1" },
       { .key = NULL, .value = NULL }
@@ -44,7 +42,6 @@ static struct output_task outputs[] = { {
     .post_func = &http_post,
     .config = (struct output_config []){
       { .key = "host", .value = "api.luftdaten.info" },
-      { .key = "port", .value = "80" },
       { .key = "path", .value = "/v1/push-sensor-data/" },
       { .key = "x-pin", .value = "7" },
       { .key = NULL, .value = NULL }

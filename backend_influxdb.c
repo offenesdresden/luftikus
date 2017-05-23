@@ -25,6 +25,10 @@ void influx_post(const struct output_config *config, const struct sensordata *va
   char *host = get_config(config, "host");
   char *port_str = get_config(config, "port");
   char *path = get_config(config, "path");
+  if (!host || !port_str || !path) {
+    printf("Invalid influx_post configuration!\n");
+    return;
+  }
 
   const struct addrinfo hints = {
     .ai_family = AF_INET,

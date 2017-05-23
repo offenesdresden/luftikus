@@ -24,7 +24,14 @@ static bool send_str(int sock, const char *str) {
 void http_post(const struct output_config *config, const struct sensordata *values) {
   char *host = get_config(config, "host");
   char *port_str = get_config(config, "port");
+  if (!port_str) {
+    port_str = "80";
+  }
   char *path = get_config(config, "path");
+  if (!host || !path) {
+    printf("Invalid http_post configuration!\n");
+    return;
+  }
 
   const struct addrinfo hints = {
     .ai_family = AF_INET,
@@ -35,7 +42,7 @@ void http_post(const struct output_config *config, const struct sensordata *valu
   int err = getaddrinfo(host, port_str, &hints, &res);
 
   if(err != 0 || res == NULL) {
-    printf("DNS lookup failed err=%d res=%p\r\n", err, res);
+    printf("DNS lookup of %s:%s failed err=%d res=%p\r\n", host, port_str, err, res);
     if (res) {
       freeaddrinfo(res);
     }
