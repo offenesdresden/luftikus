@@ -42,7 +42,6 @@ cu -s 115200 -l /dev/ttyUSB0
 # TODO
 
 * don't send 0 values for missing sensors
-* calculate mean
 * more sensors
 * https
 * mdns
