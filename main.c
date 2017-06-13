@@ -65,8 +65,13 @@ static void output_loop(void *pvParameters) {
     int outputs_done = 0;
     for(struct output_task *output = outputs; output->post_func; output++) {
       int time = now();
+      if (time < output->last_run) {
+        /* Current time is less than last_run, clock as overflown */
+        output->last_run = time;
+        continue;
+      }
       if (time < output->last_run + output->interval) {
-        /* Skip for now */
+        /* Interval has not yet elapsed */
         continue;
       }
       int previous_run = output->last_run;
