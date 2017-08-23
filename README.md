@@ -11,7 +11,7 @@ See original code for Arduino at https://github.com/opendata-stuttgart/sensors-s
 ## Prepare esp-open-sdk
 
 ```shell
-sudo apt-get install make unrar-free autoconf automake libtool gcc g++ gperf \
+sudo apt-get install make unrar-free autoconf automake libtool libtool-bin gcc g++ gperf \
     flex bison texinfo gawk ncurses-dev libexpat-dev python-dev python python-serial \
     sed git unzip bash help2man wget bzip2
 
