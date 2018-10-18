@@ -133,7 +133,7 @@ static void output_loop(void *pvParameters) {
 
 static void wifi_check_loop(void *pvParameters) {
   for(;;) {
-    vTaskSuspend(output_task);
+    vTaskSuspend(wifi_check_task);
 
     uint8_t status = sdk_wifi_station_get_connect_status();
     switch (status) {
@@ -176,7 +176,7 @@ void user_init(void)
     }
     xTaskCreate(&output_loop, "output", 1024, NULL, 2, &output_task);
 
-    xTaskCreate(&wifi_check_loop, "wifi_check", 1024, NULL, 2, &wifi_check_task);
+    xTaskCreate(&wifi_check_loop, "wifi_check", 1024, NULL, 3, &wifi_check_task);
 
     printf("user_init done!\n");
 }
