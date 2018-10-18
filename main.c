@@ -28,6 +28,17 @@ timeseries_t dht22_temp;
 timeseries_t dht22_humid;
 
 TaskHandle_t output_task;
+TaskHandle_t wifi_check_task;
+
+void wifi_init() {
+    sdk_wifi_set_opmode(STATION_MODE);
+    struct sdk_station_config wifi_config = {
+        .ssid = WIFI_SSID,
+        .password = WIFI_PSK,
+    };
+    sdk_wifi_station_set_config(&wifi_config);
+    sdk_wifi_station_connect();
+}
 
 void resume_output_task() {
   vTaskResume(output_task);
@@ -120,6 +131,21 @@ static void output_loop(void *pvParameters) {
   }
 }
 
+static void wifi_check_loop(void *pvParameters) {
+  for(;;) {
+    vTaskSuspend(output_task);
+
+    uint8_t status = sdk_wifi_station_get_connect_status();
+    switch (status) {
+    case STATION_CONNECTING:
+    case STATION_GOT_IP:
+      break;
+    default:
+      wifi_init();
+    }
+  }
+}
+
 void user_init(void)
 {
     uart_set_baud(0, 115200);
@@ -133,14 +159,7 @@ void user_init(void)
     led(true);
 
     sds011_setup();
-
-    sdk_wifi_set_opmode(STATION_MODE);
-    struct sdk_station_config wifi_config = {
-        .ssid = WIFI_SSID,
-        .password = WIFI_PSK,
-    };
-    sdk_wifi_station_set_config(&wifi_config);
-    sdk_wifi_station_connect();
+    wifi_init();
 
     timeseries_init(&sds011_p1);
     timeseries_init(&sds011_p2);
@@ -156,6 +175,8 @@ void user_init(void)
       o->last_run = 0;
     }
     xTaskCreate(&output_loop, "output", 1024, NULL, 2, &output_task);
+
+    xTaskCreate(&wifi_check_loop, "wifi_check", 1024, NULL, 2, &wifi_check_task);
 
     printf("user_init done!\n");
 }
