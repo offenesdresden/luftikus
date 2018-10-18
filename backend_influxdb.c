@@ -61,14 +61,20 @@ void influx_post(const struct output_config *config, const struct sensordata *va
   }
   freeaddrinfo(res);
 
-  char body[196];
-  snprintf(body, sizeof(body), "feinstaub,node=esp8266-%u ", sdk_system_get_chip_id());
-  int bodylen;
-  for(const struct sensordata *v = values; v->name; v++) {
-    bodylen = strlen(body);
+  char body[256];
+  snprintf(body, sizeof(body), "feinstaub,node=esp8266-%u", sdk_system_get_chip_id());
+
+  char *location = get_config(config, "location");
+  if (location) {
+    int bodylen = strlen(body);
     snprintf(body + bodylen, sizeof(body) - bodylen,
-             "%s%s=%s",
-             (v == values ? "" : ","),
+             ",location=%s", location);
+  }
+
+  for(const struct sensordata *v = values; v->name; v++) {
+    int bodylen = strlen(body);
+    snprintf(body + bodylen, sizeof(body) - bodylen,
+             ",%s=%s",
              v->name,
              v->value
       );

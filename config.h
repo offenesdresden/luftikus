@@ -58,6 +58,7 @@ static struct output_task outputs[] = { {
       { .key = "host", .value = "flatbert.hq.c3d2.de" },
       { .key = "port", .value = "8086" },
       { .key = "path", .value = "/write?db=luftdaten" },
+      { .key = "location", .value = "Aussen" },
       { .key = NULL, .value = NULL }
     },
     .flags = OUTPUT_ALL
