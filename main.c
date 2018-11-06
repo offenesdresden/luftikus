@@ -41,6 +41,7 @@ void wifi_init() {
 }
 
 void resume_output_task() {
+  vTaskResume(wifi_check_task);
   vTaskResume(output_task);
 }
 
