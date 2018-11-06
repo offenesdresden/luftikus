@@ -12,6 +12,9 @@
 #include "backend_http_post.h"
 
 
+#define TIMEOUT 5000
+
+
 static bool send_str(int sock, const char *str) {
   if (write(sock, str, strlen(str)) < 0) {
     printf("... socket send failed\r\n");
@@ -53,6 +56,18 @@ void http_post(const struct output_config *config, const struct sensordata *valu
   if(s < 0) {
     printf("... Failed to allocate socket.\r\n");
     freeaddrinfo(res);
+    return;
+  }
+  int opt = TIMEOUT;
+  if (lwip_setsockopt(s, SOL_SOCKET, SO_RCVTIMEO, (void *)&opt, sizeof(opt)) != 0) {
+    close(s);
+    printf("Failed to set recv timeout\r\n");
+    return;
+  }
+  opt = TIMEOUT;
+  if (lwip_setsockopt(s, SOL_SOCKET, SO_SNDTIMEO, (void *)&opt, sizeof(opt)) != 0) {
+    close(s);
+    printf("Failed to set send timeout\r\n");
     return;
   }
 
